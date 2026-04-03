@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Humention | CV Portaal</title>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --accent: #e8a020;
+      --light: #f4f7fb;
+      --white: #ffffff;
+      --border: #dce4ef;
+      --text: #1e2d40;
+      --muted: #6b7f99;
+      --danger: #c0392b;
+      --success: #27ae60;
+      --card-shadow: 0 2px 12px rgba(26,58,92,0.09);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); color: var(--text); min-height: 100vh; }
+
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);
+    }
+    .login-card {
+      background: var(--white); border-radius: 16px; padding: 48px 40px;
+      width: 420px; box-shadow: 0 16px 48px rgba(0,0,0,0.18); text-align: center;
+    }
+    .login-logo { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 6px; }
+    .login-logo span { color: var(--accent); }
+    .login-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+    .login-card label { display: block; text-align: left; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .login-card select, .login-card input {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 15px; color: var(--text); margin-bottom: 20px; outline: none; transition: border 0.2s;
+    }
+    .login-card select:focus, .login-card input:focus { border-color: var(--primary); }
+    .btn-primary {
+      width: 100%; background: var(--primary); color: var(--white); border: none;
+      padding: 13px; border-radius: 8px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #2d6a9f; }
+
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+    header {
+      background: var(--primary); color: var(--white); padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between; height: 60px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.14); position: sticky; top: 0; z-index: 100;
+    }
+    .header-logo { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+    .header-logo span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .user-badge {
+      display: flex; align-items: center; gap: 8px; font-size: 14px;
+      background: rgba(255,255,255,0.13); border-radius: 20px; padding: 5px 14px;
+    }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;
+    }
+    .btn-logout {
+      background: transparent; border: 1.5px solid rgba(255,255,255,0.4); color: var(--white);
+      padding: 5px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.1); }
+
+    main { display: flex; flex: 1; }
+    nav {
+      width: 220px; background: var(--white); border-right: 1px solid var(--border);
+      padding: 24px 0; display: flex; flex-direction: column; gap: 4px; min-height: calc(100vh - 60px);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 11px 24px;
+      font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer;
+      border-left: 3px solid transparent; transition: 0.15s;
+    }
+    .nav-item:hover { background: var(--light); color: var(--primary); }
+    .nav-item.active { color: var(--primary); background: #eef3fa; border-left-color: var(--primary); font-weight: 700; }
+    .nav-section { padding: 18px 24px 6px; font-size: 11px; font-weight: 700; color: #b0bfcc; letter-spacing: 0.8px; text-transform: uppercase; }
+
+    .content { flex: 1; padding: 32px; overflow-y: auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-title { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+    .page-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--white); border-radius: 12px; padding: 20px 22px;
+      box-shadow: var(--card-shadow); border: 1px solid var(--border);
+    }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-value { font-size: 30px; font-weight: 800; color: var(--primary); }
+    .stat-card.accent .stat-value { color: var(--accent); }
+
+    .toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+    .search-box {
+      flex: 1; display: flex; align-items: center; background: var(--white);
+      border: 1.5px solid var(--border); border-radius: 8px; padding: 0 14px; gap: 8px;
+    }
+    .search-box input { border: none; outline: none; font-size: 14px; padding: 10px 0; flex: 1; color: var(--text); background: transparent; }
+    .filter-select {
+      padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--text); background: var(--white); outline: none; cursor: pointer;
+    }
+    .btn-add {
+      background: var(--primary); color: var(--white); border: none; padding: 10px 20px;
+      border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: background 0.2s;
+    }
+    .btn-add:hover { background: #2d6a9f; }
+
+    .cv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+    .cv-card {
+      background: var(--white); border-radius: 12px; padding: 22px;
+      box-shadow: var(--card-shadow); border: 1px solid var(--border);
+      transition: box-shadow 0.2s, transform 0.15s; cursor: pointer;
+    }
+    .cv-card:hover { box-shadow: 0 6px 24px rgba(26,58,92,0.14); transform: translateY(-2px); }
+    .cv-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .cv-avatar {
+      width: 46px; height: 46px; border-radius: 50%; background: var(--primary);
+      display: flex; align-items: center; justify-content: center; font-weight: 800;
+      font-size: 16px; color: var(--white); flex-shrink: 0;
+    }
+    .cv-name { font-size: 16px; font-weight: 700; color: var(--text); }
+    .cv-role { font-size: 13px; color: var(--muted); margin-top: 1px; }
+    .cv-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tag { background: #eef3fa; color: var(--primary); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 12px; }
+    .tag.orange { background: #fdf3e3; color: #c47a0a; }
+    .cv-updated { font-size: 12px; color: #a0b0c4; margin-top: 2px; }
+    .cv-actions { display: flex; gap: 8px; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+    .btn-sm {
+      flex: 1; padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: 1.5px solid var(--border); background: var(--white);
+      color: var(--text); transition: 0.15s; text-align: center;
+    }
+    .btn-sm:hover { background: var(--light); }
+    .btn-sm.primary { background: var(--primary); color: var(--white); border-color: var(--primary); }
+    .btn-sm.primary:hover { background: #2d6a9f; }
+    .btn-sm.danger { color: var(--danger); border-color: #f5c6c2; }
+    .btn-sm.danger:hover { background: #fdf0ef; }
+
+    .editor-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; }
+    .editor-nav { background: var(--white); border-radius: 12px; padding: 16px 0; box-shadow: var(--card-shadow); border: 1px solid var(--border); height: fit-content; }
+    .editor-nav-item {
+      padding: 11px 20px; font-size: 14px; font-weight: 500; color: var(--muted);
+      cursor: pointer; border-left: 3px solid transparent; transition: 0.15s; display: flex; align-items: center; gap: 8px;
+    }
+    .editor-nav-item:hover { background: var(--light); color: var(--primary); }
+    .editor-nav-item.active { color: var(--primary); background: #eef3fa; border-left-color: var(--accent); font-weight: 700; }
+    .editor-card { background: var(--white); border-radius: 12px; padding: 28px 32px; box-shadow: var(--card-shadow); border: 1px solid var(--border); }
+    .editor-section { display: none; }
+    .editor-section.active { display: block; }
+    .section-title { font-size: 17px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+    .section-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 10px 13px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--text); outline: none; transition: border 0.2s; font-family: inherit;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .entry-card {
+      background: var(--light); border-radius: 10px; padding: 18px; margin-bottom: 14px;
+      border: 1.5px solid var(--border); position: relative;
+    }
+    .entry-card .entry-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .entry-card .entry-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .entry-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-entry {
+      padding: 5px 13px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: 1.5px solid var(--border); background: var(--white); color: var(--text); transition: 0.15s;
+    }
+    .btn-entry:hover { background: #eef3fa; color: var(--primary); }
+    .btn-entry.danger { color: var(--danger); border-color: #f5c6c2; }
+    .btn-entry.danger:hover { background: #fdf0ef; }
+    .add-entry-btn {
+      width: 100%; padding: 11px; border: 2px dashed var(--border); border-radius: 10px;
+      background: transparent; color: var(--muted); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: 0.15s; margin-top: 4px;
+    }
+    .add-entry-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef3fa; }
+    .skills-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .skill-tag {
+      background: var(--primary); color: var(--white); padding: 6px 13px;
+      border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+    }
+    .skill-remove { cursor: pointer; opacity: 0.7; font-size: 15px; line-height: 1; }
+    .skill-remove:hover { opacity: 1; }
+    .skill-input-row { display: flex; gap: 10px; }
+    .skill-input-row input { flex: 1; }
+    .btn-add-skill {
+      padding: 10px 18px; background: var(--primary); color: var(--white); border: none;
+      border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-add-skill:hover { background: #2d6a9f; }
+    .save-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);
+    }
+    .save-status { font-size: 13px; color: var(--success); font-weight: 600; display: none; }
+    .btn-save {
+      background: var(--accent); color: var(--white); border: none; padding: 11px 28px;
+      border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;
+    }
+    .btn-save:hover { background: #c9891a; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--white); border-radius: 16px; padding: 36px; width: 520px;
+      max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 19px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .btn-cancel {
+      padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-weight: 600; background: var(--white); color: var(--text); cursor: pointer; transition: 0.15s;
+    }
+    .btn-cancel:hover { background: var(--light); }
+
+    .cv-preview {
+      background: white; max-width: 800px; margin: 0 auto;
+      padding: 48px 52px; font-family: 'Segoe UI', Arial, sans-serif; color: #1e2d40;
+      border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--card-shadow);
+    }
+    .cv-preview-header { display: flex; gap: 32px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 3px solid #1a3a5c; }
+    .cv-preview-avatar {
+      width: 80px; height: 80px; border-radius: 50%; background: var(--primary);
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+      font-weight: 800; color: white; flex-shrink: 0;
+    }
+    .cv-preview-name { font-size: 26px; font-weight: 800; color: #1a3a5c; margin-bottom: 4px; }
+    .cv-preview-role { font-size: 16px; color: #e8a020; font-weight: 600; margin-bottom: 10px; }
+    .cv-preview-contact { font-size: 13px; color: #6b7f99; line-height: 1.7; }
+    .cv-section-title { font-size: 15px; font-weight: 800; color: #1a3a5c; text-transform: uppercase; letter-spacing: 0.8px; margin: 24px 0 12px; border-left: 4px solid #e8a020; padding-left: 10px; }
+    .cv-exp-item { margin-bottom: 16px; }
+    .cv-exp-title { font-size: 14px; font-weight: 700; }
+    .cv-exp-company { font-size: 13px; color: #6b7f99; }
+    .cv-exp-desc { font-size: 13px; margin-top: 4px; line-height: 1.6; }
+    .cv-skills-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cv-skill-pill { background: #1a3a5c; color: white; padding: 4px 13px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .cv-preview-footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #dce4ef; font-size: 11px; color: #a0b0c4; text-align: center; }
+
+    @media print {
+      body > *:not(#pdf-print-wrapper) { display: none !important; }
+      #pdf-print-wrapper { display: block !important; }
+      .cv-preview { box-shadow: none; border: none; margin: 0; padding: 30px; }
+    }
+    @media (max-width: 900px) {
+      nav { width: 64px; }
+      .nav-item span { display: none; }
+      .nav-section { display: none; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .editor-layout { grid-template-columns: 1fr; }
+    }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Humen<span>tion</span></div>
+    <div class="login-sub">CV Portaal — Log in om verder te gaan</div>
+    <label>Wie ben jij?</label>
+    <select id="login-user"><option value="">— Kies jouw naam —</option></select>
+    <label>Of log in als HR-beheerder</label>
+    <select id="login-role">
+      <option value="consultant">Consultant (eigen CV)</option>
+      <option value="admin">HR-beheerder (alle CV's)</option>
+    </select>
+    <button class="btn-primary" onclick="doLogin()">Inloggen →</button>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="header-logo">Humen<span>tion</span> <span style="font-size:13px;font-weight:400;opacity:0.6;">CV Portaal</span></div>
+    <div class="header-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="hdr-avatar">?</div>
+        <span id="hdr-name">Gebruiker</span>
+        <span id="hdr-role-badge" style="font-size:11px;opacity:0.7;"></span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Uitloggen</button>
+    </div>
+  </header>
+  <main>
+    <nav id="sidebar">
+      <div class="nav-section" id="nav-overzicht-section">Overzicht</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="showPage('cv-list')" id="nav-cv-list">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 9h1M9 13h6M9 17h6"/></svg>
+        <span>Alle CV's</span>
+      </div>
+      <div class="nav-section">Mijn CV</div>
+      <div class="nav-item" onclick="showPage('my-cv')" id="nav-my-cv">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Mijn profiel</span>
+      </div>
+    </nav>
+
+    <div class="content">
+
+      <div class="page active" id="page-dashboard">
+        <div class="page-title" id="dash-greeting">Welkom terug!</div>
+        <div class="page-sub">Overzicht van het Humention CV-portaal</div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">Totaal consultants</div><div class="stat-value" id="stat-total">0</div></div>
+          <div class="stat-card accent"><div class="stat-label">Recent bijgewerkt</div><div class="stat-value" id="stat-recent">0</div></div>
+          <div class="stat-card"><div class="stat-label">Unieke skills</div><div class="stat-value" id="stat-skills">0</div></div>
+          <div class="stat-card"><div class="stat-label">Mijn CV-score</div><div class="stat-value" id="stat-my-score">—</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="editor-card">
+            <div class="section-title" style="margin-bottom:16px;">Recente updates</div>
+            <div id="recent-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+          <div class="editor-card">
+            <div class="section-title" style="margin-bottom:16px;">Top vaardigheden</div>
+            <div id="top-skills" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-cv-list">
+        <div class="page-title">Alle CV's</div>
+        <div class="page-sub">Zoek, filter en bekijk alle consultantprofielen</div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg width="16" height="16" fill="none" stroke="#a0b0c4" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Zoek op naam, skill, rol…" id="search-input" oninput="renderCvList()" />
+          </div>
+          <select class="filter-select" id="skill-filter" onchange="renderCvList()"><option value="">Alle skills</option></select>
+          <button class="btn-add" onclick="openAddModal()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Consultant toevoegen
+          </button>
+        </div>
+        <div class="cv-grid" id="cv-grid"></div>
+      </div>
+
+      <div class="page" id="page-my-cv">
+        <div class="page-title" id="editor-title">Mijn CV bewerken</div>
+        <div class="page-sub" id="editor-sub">Houd jouw profiel up-to-date voor klanten en collega's</div>
+        <div class="editor-layout">
+          <div class="editor-nav" id="editor-nav">
+            <div class="editor-nav-item active" onclick="showSection('sec-basis')" data-sec="sec-basis">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              Basisgegevens
+            </div>
+            <div class="editor-nav-item" onclick="showSection('sec-samen')" data-sec="sec-samen">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12l10-9 10 9"/><path d="M5 12v7h14v-7"/></svg>
+              Samenvatting
+            </div>
+            <div class="editor-nav-item" onclick="showSection('sec-werk')" data-sec="sec-werk">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+              Werkervaring
+            </div>
+            <div class="editor-nav-item" onclick="showSection('sec-opleiding')" data-sec="sec-opleiding">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              Opleiding
+            </div>
+            <div class="editor-nav-item" onclick="showSection('sec-skills')" data-sec="sec-skills">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Skills
+            </div>
+            <div class="editor-nav-item" onclick="showSection('sec-cert')" data-sec="sec-cert">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72M19.13 21.19C15.73 16.78 11.1 14 4 14c0 5.9 4.12 10.44 9.48 11"/></svg>
+              Certificaten
+            </div>
+            <div class="editor-nav-item" onclick="showSection('sec-talen')" data-sec="sec-talen">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+              Talen
+            </div>
+          </div>
+          <div class="editor-card">
+            <div class="editor-section active" id="sec-basis">
+              <div class="section-title">Basisgegevens</div>
+              <div class="section-sub">Persoonlijke en contactinformatie</div>
+              <div class="form-row">
+                <div class="form-group"><label>Voornaam</label><input type="text" id="f-voornaam" placeholder="Jan"></div>
+                <div class="form-group"><label>Achternaam</label><input type="text" id="f-achternaam" placeholder="de Vries"></div>
+              </div>
+              <div class="form-group"><label>Functietitel / Rol</label><input type="text" id="f-rol" placeholder="Senior Business Consultant"></div>
+              <div class="form-row">
+                <div class="form-group"><label>E-mailadres</label><input type="email" id="f-email" placeholder="j.devries@humention.com"></div>
+                <div class="form-group"><label>Telefoonnummer</label><input type="tel" id="f-telefoon" placeholder="+31 6 12345678"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Woonplaats</label><input type="text" id="f-woonplaats" placeholder="Amsterdam"></div>
+                <div class="form-group"><label>LinkedIn</label><input type="text" id="f-linkedin" placeholder="linkedin.com/in/jandevries"></div>
+              </div>
+              <div class="form-group"><label>Jaren ervaring</label><input type="number" id="f-jaren" placeholder="8" min="0" max="50"></div>
+              <div class="save-bar">
+                <span class="save-status" id="save-status-basis">✓ Opgeslagen!</span>
+                <button class="btn-save" onclick="saveSection('basis')">Opslaan</button>
+              </div>
+            </div>
+
+            <div class="editor-section" id="sec-samen">
+              <div class="section-title">Professionele samenvatting</div>
+              <div class="section-sub">Korte introductietekst die bovenaan je CV verschijnt</div>
+              <div class="form-group"><label>Samenvatting</label>
+                <textarea id="f-samenvatting" rows="8" placeholder="Beschrijf wie je bent, wat je drijft en wat jou onderscheidt als consultant…"></textarea>
+              </div>
+              <div class="save-bar">
+                <span class="save-status" id="save-status-samen">✓ Opgeslagen!</span>
+                <button class="btn-save" onclick="saveSection('samen')">Opslaan</button>
+              </div>
+            </div>
+
+            <div class="editor-section" id="sec-werk">
+              <div class="section-title">Werkervaring</div>
+              <div class="section-sub">Voeg je relevante werkervaringen toe</div>
+              <div id="werk-list"></div>
+              <button class="add-entry-btn" onclick="openWerkModal()">+ Werkervaring toevoegen</button>
+            </div>
+
+            <div class="editor-section" id="sec-opleiding">
+              <div class="section-title">Opleiding</div>
+              <div class="section-sub">Diploma's en studies</div>
+              <div id="opl-list"></div>
+              <button class="add-entry-btn" onclick="openOplModal()">+ Opleiding toevoegen</button>
+            </div>
+
+            <div class="editor-section" id="sec-skills">
+              <div class="section-title">Skills & expertise</div>
+              <div class="section-sub">Klik op × om een skill te verwijderen</div>
+              <div class="skills-grid" id="skills-grid"></div>
+              <div class="skill-input-row">
+                <div class="form-group" style="flex:1;margin:0"><input type="text" id="skill-new" placeholder="Voeg skill toe (bijv. 'Agile', 'Power BI')" onkeydown="if(event.key==='Enter')addSkill()"></div>
+                <button class="btn-add-skill" onclick="addSkill()">+ Toevoegen</button>
+              </div>
+              <div class="save-bar">
+                <span class="save-status" id="save-status-skills">✓ Opgeslagen!</span>
+                <button class="btn-save" onclick="saveSection('skills')">Opslaan</button>
+              </div>
+            </div>
+
+            <div class="editor-section" id="sec-cert">
+              <div class="section-title">Certificaten</div>
+              <div class="section-sub">Relevante certificaten en accreditaties</div>
+              <div id="cert-list"></div>
+              <button class="add-entry-btn" onclick="openCertModal()">+ Certificaat toevoegen</button>
+            </div>
+
+            <div class="editor-section" id="sec-talen">
+              <div class="section-title">Talen</div>
+              <div class="section-sub">Talen die je spreekt en je niveau</div>
+              <div id="talen-list"></div>
+              <button class="add-entry-btn" onclick="openTaalModal()">+ Taal toevoegen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-title">Consultant toevoegen</div>
+    <div class="modal-sub">Vul de basisgegevens in</div>
+    <div class="form-row">
+      <div class="form-group"><label>Voornaam</label><input type="text" id="m-voornaam"></div>
+      <div class="form-group"><label>Achternaam</label><input type="text" id="m-achternaam"></div>
+    </div>
+    <div class="form-group"><label>Functietitel</label><input type="text" id="m-rol" placeholder="Consultant"></div>
+    <div class="form-group"><label>E-mailadres</label><input type="email" id="m-email" placeholder="naam@humention.com"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('add-modal')">Annuleren</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="saveNewConsultant()">Toevoegen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="werk-modal">
+  <div class="modal">
+    <div class="modal-title">Werkervaring</div>
+    <div class="modal-sub">Vul de details van deze functie in</div>
+    <input type="hidden" id="w-idx" value="-1">
+    <div class="form-group"><label>Functie</label><input type="text" id="w-functie" placeholder="Projectmanager"></div>
+    <div class="form-group"><label>Bedrijf / Opdrachtgever</label><input type="text" id="w-bedrijf" placeholder="ACME B.V."></div>
+    <div class="form-row">
+      <div class="form-group"><label>Startdatum</label><input type="month" id="w-start"></div>
+      <div class="form-group"><label>Einddatum (leeg = heden)</label><input type="month" id="w-eind"></div>
+    </div>
+    <div class="form-group"><label>Omschrijving</label><textarea id="w-omschrijving" rows="4" placeholder="Beschrijf je rol, verantwoordelijkheden en resultaten…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('werk-modal')">Annuleren</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="saveWerk()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="opl-modal">
+  <div class="modal">
+    <div class="modal-title">Opleiding</div>
+    <input type="hidden" id="o-idx" value="-1">
+    <div class="form-group"><label>Opleiding / Studie</label><input type="text" id="o-naam" placeholder="Master Bedrijfskunde"></div>
+    <div class="form-group"><label>Instelling</label><input type="text" id="o-inst" placeholder="Universiteit van Amsterdam"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Startjaar</label><input type="number" id="o-start" placeholder="2010"></div>
+      <div class="form-group"><label>Eindjaar</label><input type="number" id="o-eind" placeholder="2014"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('opl-modal')">Annuleren</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="saveOpl()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cert-modal">
+  <div class="modal">
+    <div class="modal-title">Certificaat</div>
+    <input type="hidden" id="c-idx" value="-1">
+    <div class="form-group"><label>Naam certificaat</label><input type="text" id="c-naam" placeholder="PMP, PRINCE2…"></div>
+    <div class="form-group"><label>Uitgever</label><input type="text" id="c-uitgever" placeholder="PMI, AXELOS…"></div>
+    <div class="form-group"><label>Jaar behaald</label><input type="number" id="c-jaar" placeholder="2022"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('cert-modal')">Annuleren</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="saveCert()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="taal-modal">
+  <div class="modal">
+    <div class="modal-title">Taal toevoegen</div>
+    <input type="hidden" id="t-idx" value="-1">
+    <div class="form-group"><label>Taal</label><input type="text" id="t-naam" placeholder="Nederlands, Engels…"></div>
+    <div class="form-group"><label>Niveau</label>
+      <select id="t-niveau">
+        <option>Moedertaal</option><option>C2 – Bijna native</option><option>C1 – Vloeiend</option>
+        <option>B2 – Gevorderd</option><option>B1 – Gemiddeld</option><option>A2 – Basis</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('taal-modal')">Annuleren</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="saveTaal()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cv-preview-modal">
+  <div class="modal" style="width:860px;max-width:97vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="modal-title">CV Voorbeeld</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="printCV()">🖨️ PDF / Afdrukken</button>
+        <button class="btn-cancel" onclick="closeModal('cv-preview-modal')">Sluiten</button>
+      </div>
+    </div>
+    <div id="cv-preview-content"></div>
+  </div>
+</div>
+
+<div id="pdf-print-wrapper" style="display:none;"></div>
+
+<script>
+const STORE_KEY = 'humention_cvs';
+function getStore() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { consultants: [] }; } catch { return { consultants: [] }; } }
+function saveStore(data) { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+function defaultCV(id, naam, rol, email) {
+  return { id, naam, rol, email, telefoon:'', woonplaats:'', linkedin:'', jaren:'', samenvatting:'', skills:[], werkervaring:[], opleiding:[], certificaten:[], talen:[], updated: new Date().toISOString().slice(0,10) };
+}
+
+(function seedIfEmpty() {
+  const s = getStore();
+  if (s.consultants.length === 0) {
+    s.consultants = [
+      { ...defaultCV('1','Sophie van der Berg','Senior Business Consultant','s.vandenberg@humention.com'), telefoon:'+31 6 11234567', woonplaats:'Amsterdam', jaren:'9', samenvatting:'Ervaren consultant met een sterke achtergrond in procesoptimalisatie en organisatieverandering.', skills:['Agile','Change Management','Power BI','Stakeholder Management','PRINCE2'], werkervaring:[{functie:'Senior Consultant',bedrijf:'Humention',start:'2019-01',eind:'',omschrijving:'Leidend bij digitale transformatieprojecten bij meerdere klanten.'}], opleiding:[{naam:'MSc Bedrijfskunde',instelling:'Vrije Universiteit Amsterdam',start:'2012',eind:'2014'}], certificaten:[{naam:'PRINCE2 Practitioner',uitgever:'AXELOS',jaar:'2020'}], talen:[{naam:'Nederlands',niveau:'Moedertaal'},{naam:'Engels',niveau:'C1 – Vloeiend'}], updated:'2026-03-28' },
+      { ...defaultCV('2','Maarten Jansen','Data & Analytics Consultant','m.jansen@humention.com'), telefoon:'+31 6 22345678', woonplaats:'Utrecht', jaren:'6', samenvatting:'Gepassioneerd data-analist met expertise in BI-tooling en datagedreven besluitvorming.', skills:['Power BI','Python','SQL','Azure','Tableau','Data Governance'], werkervaring:[{functie:'Data Consultant',bedrijf:'Humention',start:'2021-06',eind:'',omschrijving:'Bouwen van dashboards en datapijplijnen voor financiële klanten.'}], opleiding:[{naam:'BSc Informatica',instelling:'TU Delft',start:'2015',eind:'2019'}], certificaten:[{naam:'Microsoft PL-300',uitgever:'Microsoft',jaar:'2022'}], talen:[{naam:'Nederlands',niveau:'Moedertaal'},{naam:'Engels',niveau:'C2 – Bijna native'}], updated:'2026-04-01' },
+      { ...defaultCV('3','Lisanne de Groot','HR & Organisatie Adviseur','l.degroot@humention.com'), telefoon:'+31 6 33456789', woonplaats:'Den Haag', jaren:'11', samenvatting:'HR-specialist met brede ervaring in organisatieontwikkeling, recruitment en L&D.', skills:['HRM','Recruitment','L&D','Organisatieadvies','360-graden feedback'], werkervaring:[{functie:'HR Adviseur',bedrijf:'Humention',start:'2018-03',eind:'',omschrijving:'Strategisch HR-partner voor overheidsklanten in reorganisatietrajecten.'}], opleiding:[{naam:'MSc Human Resource Management',instelling:'Erasmus Universiteit',start:'2011',eind:'2013'}], certificaten:[], talen:[{naam:'Nederlands',niveau:'Moedertaal'},{naam:'Frans',niveau:'B2 – Gevorderd'}], updated:'2026-02-14' }
+    ];
+    saveStore(s);
+  }
+})();
+
+let currentUser = null, currentRole = 'consultant', editingId = null;
+
+window.onload = function() {
+  const s = getStore();
+  const sel = document.getElementById('login-user');
+  s.consultants.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.naam; sel.appendChild(o); });
+  const o2 = document.createElement('option'); o2.value = 'new'; o2.textContent = '+ Ik sta er nog niet in (nieuw profiel)'; sel.appendChild(o2);
+};
+
+function doLogin() {
+  const uid = document.getElementById('login-user').value;
+  const role = document.getElementById('login-role').value;
+  if (!uid) { alert('Kies eerst jouw naam.'); return; }
+  currentRole = role;
+  const s = getStore();
+  if (uid === 'new') {
+    const naam = prompt('Wat is jouw volledige naam?'); if (!naam) return;
+    const rol = prompt('Wat is jouw functietitel?') || 'Consultant';
+    const email = prompt('Wat is jouw e-mailadres?') || '';
+    const id = Date.now().toString();
+    const cv = defaultCV(id, naam, rol, email);
+    s.consultants.push(cv); saveStore(s); currentUser = cv;
+    const sel = document.getElementById('login-user');
+    const o = document.createElement('option'); o.value = id; o.textContent = naam;
+    sel.insertBefore(o, sel.lastElementChild);
+  } else {
+    currentUser = s.consultants.find(c => c.id === uid);
+    if (!currentUser) { alert('Gebruiker niet gevonden.'); return; }
+  }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  const ini = currentUser.naam.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('hdr-avatar').textContent = ini;
+  document.getElementById('hdr-name').textContent = currentUser.naam;
+  document.getElementById('hdr-role-badge').textContent = role === 'admin' ? '(beheerder)' : '';
+  document.getElementById('nav-cv-list').style.display = role === 'admin' ? '' : 'none';
+  editingId = currentUser.id;
+  loadEditorData(); renderDashboard(); renderCvList(); showPage('dashboard');
+}
+
+function doLogout() {
+  currentUser = null; currentRole = 'consultant';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page)?.classList.add('active');
+  if (page === 'my-cv') loadEditorData();
+}
+
+function showSection(sec) {
+  document.querySelectorAll('.editor-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.editor-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(sec).classList.add('active');
+  document.querySelector(`.editor-nav-item[data-sec="${sec}"]`).classList.add('active');
+}
+
+function renderDashboard() {
+  const s = getStore(); const all = s.consultants;
+  document.getElementById('stat-total').textContent = all.length;
+  const thirtyDays = new Date(); thirtyDays.setDate(thirtyDays.getDate() - 30);
+  document.getElementById('stat-recent').textContent = all.filter(c => new Date(c.updated) >= thirtyDays).length;
+  document.getElementById('stat-skills').textContent = [...new Set(all.flatMap(c => c.skills))].length;
+  document.getElementById('stat-my-score').textContent = calcScore(all.find(c => c.id === currentUser.id)) + '%';
+  document.getElementById('dash-greeting').textContent = 'Welkom, ' + currentUser.naam.split(' ')[0] + '!';
+  const sorted = [...all].sort((a,b) => new Date(b.updated) - new Date(a.updated)).slice(0,5);
+  document.getElementById('recent-list').innerHTML = sorted.map(c => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);"><div class="cv-avatar" style="width:36px;height:36px;font-size:13px;">${initials(c.naam)}</div><div><div style="font-size:14px;font-weight:600;">${c.naam}</div><div style="font-size:12px;color:var(--muted);">${c.rol} — ${c.updated}</div></div></div>`).join('');
+  const freq = {}; all.forEach(c => c.skills.forEach(sk => { freq[sk] = (freq[sk]||0)+1; }));
+  document.getElementById('top-skills').innerHTML = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([sk,n]) => `<span class="skill-tag">${sk}<span style="margin-left:4px;opacity:0.7;font-size:11px;">${n}x</span></span>`).join('');
+}
+
+function calcScore(cv) {
+  let s = 0;
+  if (cv.naam) s+=10; if (cv.rol) s+=10; if (cv.email) s+=10;
+  if (cv.samenvatting?.length > 50) s+=20; if (cv.skills.length > 0) s+=15;
+  if (cv.werkervaring.length > 0) s+=20; if (cv.opleiding.length > 0) s+=10; if (cv.talen.length > 0) s+=5;
+  return Math.min(100, s);
+}
+function initials(naam) { return naam.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+function renderCvList() {
+  const s = getStore();
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sf = document.getElementById('skill-filter').value;
+  const allSkills = [...new Set(s.consultants.flatMap(c => c.skills))].sort();
+  const sfEl = document.getElementById('skill-filter'); const curVal = sfEl.value;
+  sfEl.innerHTML = '<option value="">Alle skills</option>' + allSkills.map(sk => `<option${sk===curVal?' selected':''}>${sk}</option>`).join('');
+  let cvs = s.consultants;
+  if (q) cvs = cvs.filter(c => c.naam.toLowerCase().includes(q) || c.rol.toLowerCase().includes(q) || c.skills.some(sk => sk.toLowerCase().includes(q)));
+  if (sf) cvs = cvs.filter(c => c.skills.includes(sf));
+  const grid = document.getElementById('cv-grid');
+  if (cvs.length === 0) { grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>Geen CV's gevonden</h3><p>Pas de zoekopdracht aan.</p></div>`; return; }
+  grid.innerHTML = cvs.map(c => `<div class="cv-card"><div class="cv-card-top"><div class="cv-avatar">${initials(c.naam)}</div><div><div class="cv-name">${c.naam}</div><div class="cv-role">${c.rol||'—'}</div></div></div><div class="cv-tags">${c.skills.slice(0,4).map(sk=>`<span class="tag">${sk}</span>`).join('')}${c.skills.length>4?`<span class="tag orange">+${c.skills.length-4}</span>`:''}</div><div class="cv-updated">Bijgewerkt: ${c.updated}</div><div class="cv-actions"><button class="btn-sm" onclick="previewCV('${c.id}')">Bekijken</button>${currentRole==='admin'?`<button class="btn-sm primary" onclick="editCV('${c.id}')">Bewerken</button><button class="btn-sm danger" onclick="deleteCV('${c.id}')">Verwijder</button>`:''}</div></div>`).join('');
+}
+
+function openAddModal() { ['m-voornaam','m-achternaam','m-rol','m-email'].forEach(id => document.getElementById(id).value = ''); document.getElementById('add-modal').classList.add('open'); }
+function saveNewConsultant() {
+  const vn = document.getElementById('m-voornaam').value.trim(), an = document.getElementById('m-achternaam').value.trim();
+  if (!vn||!an) { alert('Vul voor- en achternaam in.'); return; }
+  const s = getStore(); const id = Date.now().toString();
+  s.consultants.push(defaultCV(id, vn+' '+an, document.getElementById('m-rol').value||'Consultant', document.getElementById('m-email').value));
+  saveStore(s); closeModal('add-modal'); renderCvList(); renderDashboard();
+}
+function deleteCV(id) { if (!confirm('Weet je zeker dat je dit CV wilt verwijderen?')) return; const s=getStore(); s.consultants=s.consultants.filter(c=>c.id!==id); saveStore(s); renderCvList(); renderDashboard(); }
+function editCV(id) { editingId=id; loadEditorData(); showPage('my-cv'); const cv=getStore().consultants.find(c=>c.id===id); document.getElementById('editor-title').textContent='CV bewerken: '+cv.naam; document.getElementById('editor-sub').textContent='Pas de gegevens van '+cv.naam+' aan'; }
+
+function loadEditorData() {
+  const cv = getStore().consultants.find(c => c.id === editingId); if (!cv) return;
+  document.getElementById('f-voornaam').value = cv.naam.split(' ')[0]||'';
+  document.getElementById('f-achternaam').value = cv.naam.split(' ').slice(1).join(' ')||'';
+  document.getElementById('f-rol').value = cv.rol||''; document.getElementById('f-email').value = cv.email||'';
+  document.getElementById('f-telefoon').value = cv.telefoon||''; document.getElementById('f-woonplaats').value = cv.woonplaats||'';
+  document.getElementById('f-linkedin').value = cv.linkedin||''; document.getElementById('f-jaren').value = cv.jaren||'';
+  document.getElementById('f-samenvatting').value = cv.samenvatting||'';
+  renderSkillsGrid(cv.skills); renderWerkList(cv.werkervaring); renderOplList(cv.opleiding); renderCertList(cv.certificaten); renderTalenList(cv.talen);
+}
+function getCurrentCV() { return getStore().consultants.find(c => c.id === editingId); }
+function updateCV(changes) {
+  const s=getStore(); const idx=s.consultants.findIndex(c=>c.id===editingId); if(idx<0)return;
+  s.consultants[idx]={...s.consultants[idx],...changes,updated:new Date().toISOString().slice(0,10)};
+  saveStore(s); renderDashboard(); renderCvList();
+}
+function saveSection(sec) {
+  if (sec==='basis') { updateCV({ naam:(document.getElementById('f-voornaam').value.trim()+' '+document.getElementById('f-achternaam').value.trim()).trim(), rol:document.getElementById('f-rol').value, email:document.getElementById('f-email').value, telefoon:document.getElementById('f-telefoon').value, woonplaats:document.getElementById('f-woonplaats').value, linkedin:document.getElementById('f-linkedin').value, jaren:document.getElementById('f-jaren').value }); flashSave('save-status-basis'); }
+  else if (sec==='samen') { updateCV({samenvatting:document.getElementById('f-samenvatting').value}); flashSave('save-status-samen'); }
+  else if (sec==='skills') { flashSave('save-status-skills'); }
+}
+function flashSave(id) { const el=document.getElementById(id); el.style.display='block'; setTimeout(()=>el.style.display='none',2500); }
+
+function renderSkillsGrid(skills) { document.getElementById('skills-grid').innerHTML = skills.map((sk,i)=>`<div class="skill-tag">${sk}<span class="skill-remove" onclick="removeSkill(${i})">×</span></div>`).join(''); }
+function addSkill() { const inp=document.getElementById('skill-new'); const val=inp.value.trim(); if(!val)return; const cv=getCurrentCV(); if(cv.skills.includes(val)){inp.value='';return;} const skills=[...cv.skills,val]; updateCV({skills}); renderSkillsGrid(skills); inp.value=''; flashSave('save-status-skills'); }
+function removeSkill(idx) { const cv=getCurrentCV(); const skills=cv.skills.filter((_,i)=>i!==idx); updateCV({skills}); renderSkillsGrid(skills); }
+
+function renderWerkList(list) { document.getElementById('werk-list').innerHTML = list.map((w,i)=>`<div class="entry-card"><div class="entry-title">${w.functie} – ${w.bedrijf}</div><div class="entry-sub">${w.start||''} ${w.eind?'– '+w.eind:'– heden'}</div><div class="entry-sub" style="margin-top:6px;">${w.omschrijving||''}</div><div class="entry-actions"><button class="btn-entry" onclick="openWerkModal(${i})">Bewerken</button><button class="btn-entry danger" onclick="deleteWerk(${i})">Verwijderen</button></div></div>`).join(''); }
+function openWerkModal(idx) { const cv=getCurrentCV(); document.getElementById('w-idx').value=idx!==undefined?idx:-1; const w=idx!==undefined?cv.werkervaring[idx]:{}; document.getElementById('w-functie').value=w.functie||''; document.getElementById('w-bedrijf').value=w.bedrijf||''; document.getElementById('w-start').value=w.start||''; document.getElementById('w-eind').value=w.eind||''; document.getElementById('w-omschrijving').value=w.omschrijving||''; document.getElementById('werk-modal').classList.add('open'); }
+function saveWerk() { const idx=parseInt(document.getElementById('w-idx').value); const item={functie:document.getElementById('w-functie').value,bedrijf:document.getElementById('w-bedrijf').value,start:document.getElementById('w-start').value,eind:document.getElementById('w-eind').value,omschrijving:document.getElementById('w-omschrijving').value}; const cv=getCurrentCV(); const list=[...cv.werkervaring]; if(idx<0)list.unshift(item);else list[idx]=item; updateCV({werkervaring:list}); renderWerkList(list); closeModal('werk-modal'); }
+function deleteWerk(idx) { const cv=getCurrentCV(); const list=cv.werkervaring.filter((_,i)=>i!==idx); updateCV({werkervaring:list}); renderWerkList(list); }
+
+function renderOplList(list) { document.getElementById('opl-list').innerHTML = list.map((o,i)=>`<div class="entry-card"><div class="entry-title">${o.naam}</div><div class="entry-sub">${o.instelling} | ${o.start}${o.eind?' – '+o.eind:''}</div><div class="entry-actions"><button class="btn-entry" onclick="openOplModal(${i})">Bewerken</button><button class="btn-entry danger" onclick="deleteOpl(${i})">Verwijderen</button></div></div>`).join(''); }
+function openOplModal(idx) { const cv=getCurrentCV(); document.getElementById('o-idx').value=idx!==undefined?idx:-1; const o=idx!==undefined?cv.opleiding[idx]:{}; document.getElementById('o-naam').value=o.naam||''; document.getElementById('o-inst').value=o.instelling||''; document.getElementById('o-start').value=o.start||''; document.getElementById('o-eind').value=o.eind||''; document.getElementById('opl-modal').classList.add('open'); }
+function saveOpl() { const idx=parseInt(document.getElementById('o-idx').value); const item={naam:document.getElementById('o-naam').value,instelling:document.getElementById('o-inst').value,start:document.getElementById('o-start').value,eind:document.getElementById('o-eind').value}; const cv=getCurrentCV(); const list=[...cv.opleiding]; if(idx<0)list.push(item);else list[idx]=item; updateCV({opleiding:list}); renderOplList(list); closeModal('opl-modal'); }
+function deleteOpl(idx) { const cv=getCurrentCV(); const list=cv.opleiding.filter((_,i)=>i!==idx); updateCV({opleiding:list}); renderOplList(list); }
+
+function renderCertList(list) { document.getElementById('cert-list').innerHTML = list.map((c,i)=>`<div class="entry-card"><div class="entry-title">${c.naam}</div><div class="entry-sub">${c.uitgever} | ${c.jaar}</div><div class="entry-actions"><button class="btn-entry" onclick="openCertModal(${i})">Bewerken</button><button class="btn-entry danger" onclick="deleteCert(${i})">Verwijderen</button></div></div>`).join(''); }
+function openCertModal(idx) { const cv=getCurrentCV(); document.getElementById('c-idx').value=idx!==undefined?idx:-1; const c=idx!==undefined?cv.certificaten[idx]:{}; document.getElementById('c-naam').value=c.naam||''; document.getElementById('c-uitgever').value=c.uitgever||''; document.getElementById('c-jaar').value=c.jaar||''; document.getElementById('cert-modal').classList.add('open'); }
+function saveCert() { const idx=parseInt(document.getElementById('c-idx').value); const item={naam:document.getElementById('c-naam').value,uitgever:document.getElementById('c-uitgever').value,jaar:document.getElementById('c-jaar').value}; const cv=getCurrentCV(); const list=[...cv.certificaten]; if(idx<0)list.push(item);else list[idx]=item; updateCV({certificaten:list}); renderCertList(list); closeModal('cert-modal'); }
+function deleteCert(idx) { const cv=getCurrentCV(); const list=cv.certificaten.filter((_,i)=>i!==idx); updateCV({certificaten:list}); renderCertList(list); }
+
+function renderTalenList(list) { document.getElementById('talen-list').innerHTML = list.map((t,i)=>`<div class="entry-card" style="display:flex;justify-content:space-between;align-items:center;"><div><div class="entry-title">${t.naam}</div><div class="entry-sub">${t.niveau}</div></div><button class="btn-entry danger" onclick="deleteTaal(${i})">Verwijderen</button></div>`).join(''); }
+function openTaalModal() { document.getElementById('t-idx').value=-1; document.getElementById('t-naam').value=''; document.getElementById('t-niveau').selectedIndex=0; document.getElementById('taal-modal').classList.add('open'); }
+function saveTaal() { const idx=parseInt(document.getElementById('t-idx').value); const item={naam:document.getElementById('t-naam').value,niveau:document.getElementById('t-niveau').value}; if(!item.naam)return; const cv=getCurrentCV(); const list=[...cv.talen]; if(idx<0)list.push(item);else list[idx]=item; updateCV({talen:list}); renderTalenList(list); closeModal('taal-modal'); }
+function deleteTaal(idx) { const cv=getCurrentCV(); const list=cv.talen.filter((_,i)=>i!==idx); updateCV({talen:list}); renderTalenList(list); }
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+function previewCV(id) { const cv=getStore().consultants.find(c=>c.id===id); document.getElementById('cv-preview-content').innerHTML=buildCVHTML(cv); document.getElementById('cv-preview-modal').classList.add('open'); }
+function printCV() { const content=document.getElementById('cv-preview-content').innerHTML; const w=document.getElementById('pdf-print-wrapper'); w.innerHTML=content; w.style.display='block'; window.print(); setTimeout(()=>{w.style.display='none';w.innerHTML='';},1000); }
+function buildCVHTML(cv) {
+  return `<div class="cv-preview">
+    <div class="cv-preview-header"><div class="cv-preview-avatar">${initials(cv.naam)}</div><div><div class="cv-preview-name">${cv.naam}</div><div class="cv-preview-role">${cv.rol||''}</div><div class="cv-preview-contact">${cv.email?'✉ '+cv.email+'<br>':''}${cv.telefoon?'📞 '+cv.telefoon+'<br>':''}${cv.woonplaats?'📍 '+cv.woonplaats+'<br>':''}${cv.linkedin?'🔗 '+cv.linkedin:''}${cv.jaren?'<br>💼 '+cv.jaren+' jaar ervaring':''}</div></div></div>
+    ${cv.samenvatting?`<div class="cv-section-title">Profiel</div><p style="font-size:13px;line-height:1.7;">${cv.samenvatting}</p>`:''}
+    ${cv.werkervaring.length>0?`<div class="cv-section-title">Werkervaring</div>${cv.werkervaring.map(w=>`<div class="cv-exp-item"><div class="cv-exp-title">${w.functie}</div><div class="cv-exp-company">${w.bedrijf} | ${w.start||''} – ${w.eind||'heden'}</div>${w.omschrijving?`<div class="cv-exp-desc">${w.omschrijving}</div>`:''}</div>`).join('')}`:''}
+    ${cv.opleiding.length>0?`<div class="cv-section-title">Opleiding</div>${cv.opleiding.map(o=>`<div class="cv-exp-item"><div class="cv-exp-title">${o.naam}</div><div class="cv-exp-company">${o.instelling} | ${o.start}${o.eind?' – '+o.eind:''}</div></div>`).join('')}`:''}
+    ${cv.skills.length>0?`<div class="cv-section-title">Skills</div><div class="cv-skills-wrap">${cv.skills.map(sk=>`<span class="cv-skill-pill">${sk}</span>`).join('')}</div>`:''}
+    ${cv.certificaten.length>0?`<div class="cv-section-title">Certificaten</div>${cv.certificaten.map(c=>`<div class="cv-exp-item"><div class="cv-exp-title">${c.naam}</div><div class="cv-exp-company">${c.uitgever} | ${c.jaar}</div></div>`).join('')}`:''}
+    ${cv.talen.length>0?`<div class="cv-section-title">Talen</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${cv.talen.map(t=>`<span class="cv-skill-pill" style="background:#e8a020;">${t.naam} – ${t.niveau}</span>`).join('')}</div>`:''}
+    <div class="cv-preview-footer">Humention CV Portaal — Gegenereerd op ${new Date().toLocaleDateString('nl-NL')}</div>
+  </div>`;
+}
+</script>
+</body>
+</html>
